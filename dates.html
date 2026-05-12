@@ -1,0 +1,1816 @@
+#DATA[#word#][_ROOT][DOWN] [*][][]
+[
+<!--- #root=[dates]# 
+#INCLUDE[BUT_NEW_DATE]#
+--->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .calendar-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fdfdfd;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .calendar-title {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        .calendar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dates-button {
+            background-color: #2196f3;
+            margin: 0;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            padding: 8px 12px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #fdfdfd;
+        }
+
+        .dates-button:hover {
+            background-color: #44a6f7;
+            box-shadow: 0 0 11px rgba(41, 41, 63, 0.1);
+        }
+
+        .dates-button:active{
+            background-color: #1c88e0;
+            transform: translateY(2px);
+            color: #F2F3F4;
+        }
+
+        #calendar {
+            margin-top: 20px;
+            min-height: 500px;
+        }
+
+        .view-toggle-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(53, 37, 143, 0.363);
+            border-radius: 8px;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .view-toggle-btn {
+            background: transparent;
+            border: none;
+            color: #fdfdfd;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: normal;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background: rgba(67, 60, 107, 0.6);
+            font-weight: bold;
+        }
+
+        #eventModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 25px;
+            border: none;
+            width: 50%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-detail {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .modal-detail strong {
+            display: inline-block;
+            width: 100px;
+            color: #666;
+        }
+
+        .modal-description {
+            margin-top: 15px;
+            padding: 10px;
+            background:  #F2F3F4;
+            border-radius: 5px;
+        }
+
+        .modal-actions {
+            margin-top: 20px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            min-height: 50px;
+        }
+
+        .rsvp-button {
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+        }
+
+        .rsvp-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .rsvp-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        .accept-button {
+            background-color: #4CAF50;
+        }
+
+        .accept-button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .decline-button {
+            background-color: #f44336;
+        }
+
+        .decline-button:hover:not(:disabled) {
+            background-color: #da190b;
+        }
+
+        .rsvp-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            height: 40px;
+        }
+
+        .rsvp-status {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            animation: fadeIn 0.5s ease-in;
+            padding: 8px 16px;
+            border-radius: 4px;
+            height: 40px;
+            box-sizing: border-box;
+            min-width: 180px;
+        }
+
+        .rsvp-status.going {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+
+        .rsvp-status.not-going {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+
+        .rsvp-status-icon {
+            font-size: 20px;
+            margin-right: 8px;
+            animation: checkmark 0.5s ease-in-out;
+        }
+
+        .rsvp-undo {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            margin-left: 10px;
+            text-decoration: underline;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .rsvp-undo:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .rsvp-undo:hover:not(:disabled) {
+            color: #333;
+        }
+
+        .event-complete {
+            color: #666;
+            font-style: italic;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .close:hover {
+            color: #454163;
+        }
+
+        .calendar-table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+        .calendar-table th {
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .calendar-table td {
+            height: 100px;
+            vertical-align: top;
+            position: relative;
+            padding: 4px;
+            width: 14.28%;
+            background-color: #fdfdfd;
+            border-radius: 4px;
+        }
+
+        .calendar-table .day-number {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-left: auto;
+            border-radius: 50%;
+        }
+
+        .calendar-table .current-day .day-number {
+            background-color: #4CAF50;
+            color: #fdfdfd;
+        }
+
+        .calendar-table .other-month {
+            color: #ccc;
+            background-color:  #F2F3F4;
+        }
+
+        .calendar-table .has-events {
+            background-color: #f8f9fa;
+        }
+
+        .calendar-table .event-item {
+            font-size: 10px;
+            padding: 3px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            clear: both;
+            color: #fdfdfd;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .calendar-table .event-item:hover {
+            opacity: 0.9;
+        }
+
+        .calendar-table th:nth-child(1) { background-color: #ec5d5d; color: #fdfdfd; }
+        .calendar-table th:nth-child(2) { background-color: #f09712; color: #fdfdfd; }
+        .calendar-table th:nth-child(3) { background-color: #e6b421; color: #fdfdfd; }
+        .calendar-table th:nth-child(4) { background-color: #32bb6b; color: #fdfdfd; }
+        .calendar-table th:nth-child(5) { background-color: #2284e7; color: #fdfdfd; }
+        .calendar-table th:nth-child(6) { background-color: #733ae6; color: #fdfdfd; }
+        .calendar-table th:nth-child(7) { background-color: #b563d8; color: #fdfdfd; }
+
+        .calendar-table .event-personal { background-color: #2284e7; }
+        .calendar-table .event-work { background-color: #04180c; }
+        .calendar-table .event-meeting { background-color: #f39c12; }
+        .calendar-table .event-appointment { background-color: #e74c3c; }
+        .calendar-table .event-reminder { background-color: #9b59b6; }
+
+        .calendar-table .event-important { background-color: #e74c3c !important; }
+        .calendar-table .event-urgent { background-color: #f39c12 !important; }
+
+        .year-view {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .year-month {
+            background: #fdfdfd;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .year-month h4 {
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .year-month h4:hover {
+            color: #667eea;
+        }
+
+        .year-month-table {
+            width: 100%;
+            font-size: 10px;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .year-month-table th {
+            padding: 3px;
+            text-align: center;
+            background: #f5f7fa;
+            font-weight: normal;
+        }
+
+        .year-month-table td {
+            padding: 3px;
+            text-align: center;
+            height: 20px;
+            position: relative;
+            border: 1px solid #eee;
+        }
+
+        .year-month-table .day-number {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+        .year-month-table .current-day .day-number {
+            background-color: #4CAF50;
+            color: #fdfdfd;
+        }
+
+        .year-month-table .has-event {
+            position: relative;
+        }
+
+        .year-month-table .has-event:after {
+            content: '';
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #3498db;
+            border-radius: 50%;
+        }
+
+        .date-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 100;
+            background: #fdfdfd;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            width: 200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .date-popup-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .date-popup-close {
+            color: #aaa;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .date-popup-close:hover {
+            color: #454163;
+        }
+
+        .date-popup-events {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .date-popup-event {
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .date-popup-event:hover {
+            background-color: #f5f5f5;
+        }
+
+        .date-popup-add {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+
+        .date-popup-add a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .date-popup-add a:hover {
+            text-decoration: underline;
+        }
+
+        .date-cell {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .date-popup-event.personal { background-color: #e3f2fd; }
+        .date-popup-event.work { background-color: #e8f5e9; }
+        .date-popup-event.meeting { background-color: #fff8e1; }
+        .date-popup-event.appointment { background-color: #ffebee; }
+        .date-popup-event.reminder { background-color: #f3e5f5; }
+
+        .clicked-date {
+            background-color: #e6f7ff !important;
+            box-shadow: inset 0 0 0 2px #1890ff;
+        }
+        
+        .mini-date-cell.clicked-date .day-number {
+            background-color: #1890ff !important;
+            color: white !important;
+        }
+
+        /* RSVP Success Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            max-height: calc(4 * 60px + 3 * 10px);
+            overflow: hidden;
+        }
+
+        .rsvp-toast {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: toastSlideIn 0.3s ease-out;
+            min-height: 50px;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .rsvp-toast.declined {
+            background: #f44336;
+        }
+
+        .rsvp-toast.cleared {
+            background: #666;
+        }
+
+        .rsvp-toast.sliding-out {
+            animation: toastSlideOut 0.3s ease-in forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from { 
+                transform: translateX(100%) scale(0.9); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        @keyframes toastSlideOut {
+            from { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+                max-height: 60px;
+                margin-bottom: 10px;
+            }
+            to { 
+                transform: translateX(100%) scale(0.9); 
+                opacity: 0; 
+                max-height: 0;
+                margin-bottom: 0;
+                padding: 0;
+            }
+        }
+
+        .rsvp-toast-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-left: 12px;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+        
+        /* Table RSVP Styles */
+        .w3-table td {
+            vertical-align: middle !important;
+        }
+        
+        .table-rsvp-buttons {
+            display: flex;
+            gap: 8px;
+            height: 40px;
+            align-items: center;
+            width: 180px;
+        }
+        
+        .table-going-status, 
+        .table-not-going-status {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 6px 12px;
+            width: 180px;
+        }
+        
+        .table-rsvp-buttons .rsvp-button {
+            min-width: 80px;
+            height: 36px;
+            padding: 6px 12px;
+            font-size: 14px;
+            flex: 1;
+        }
+        
+        /* Fixed width for RSVP column to prevent horizontal shifting */
+        .w3-table tr:not(.w3-blue) td:nth-child(9) {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            position: relative;
+        }
+        
+        /* Smaller text for status to prevent wrapping */
+        .rsvp-status {
+            font-size: 14px;
+        }
+        
+        .table-going-status,
+        .table-not-going-status {
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .year-view {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .modal-content {
+                width: 90%;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                min-height: auto;
+            }
+
+            .rsvp-buttons {
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                max-height: calc(4 * 60px + 3 * 10px);
+            }
+
+            .rsvp-toast {
+                animation: toastSlideInMobile 0.3s ease-out;
+            }
+
+            @keyframes toastSlideInMobile {
+                from { 
+                    transform: translateY(-100%) scale(0.9); 
+                    opacity: 0; 
+                }
+                to { 
+                    transform: translateY(0) scale(1); 
+                    opacity: 1; 
+                }
+            }
+
+            .rsvp-toast.sliding-out {
+                animation: toastSlideOutMobile 0.3s ease-in forwards;
+            }
+
+            @keyframes toastSlideOutMobile {
+                from { 
+                    transform: translateY(0) scale(1); 
+                    opacity: 1; 
+                    max-height: 60px;
+                    margin-bottom: 10px;
+                }
+                to { 
+                    transform: translateY(-100%) scale(0.9); 
+                    opacity: 0; 
+                    max-height: 0;
+                    margin-bottom: 0;
+                    padding: 0;
+                }
+            }
+            
+            .table-rsvp-buttons {
+                flex-direction: row;
+                gap: 5px;
+                height: 40px;
+                width: 100%;
+            }
+            
+            .table-rsvp-buttons .rsvp-button {
+                width: 100%;
+                min-width: auto;
+                font-size: 13px;
+                padding: 6px 8px;
+            }
+            
+            .table-going-status,
+            .table-not-going-status {
+                width: 100%;
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            
+            .w3-table tr:not(.w3-blue) td:nth-child(9) {
+                width: 150px;
+                min-width: 150px;
+                max-width: 150px;
+            }
+            
+            .rsvp-status {
+                font-size: 13px;
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .w3-table tr:not(.w3-blue) td:nth-child(9) {
+                width: 140px;
+                min-width: 140px;
+                max-width: 140px;
+            }
+            
+            .rsvp-status {
+                min-width: 140px;
+                font-size: 12px;
+            }
+            
+            .table-rsvp-buttons .rsvp-button {
+                font-size: 12px;
+                padding: 5px 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-controls">
+                <button class="dates-button" id="prevBtn">❮</button>
+                <button class="dates-button" id="todayBtn">Today</button>
+                <button class="dates-button" id="nextBtn">❯</button>
+            </div>
+            <div class="calendar-title">
+                <h2 id="monthYearHeader">Calendar</h2>
+            </div>
+            <div class="calendar-actions">
+                <div class="view-toggle-buttons">
+                    <button id="monthViewBtn" class="view-toggle-btn active">Month</button>
+                    <button id="yearViewBtn" class="view-toggle-btn">Year</button>
+                </div>
+                <a class="dates-button w3-round-xlarge" href="#_ORBIT#page?r=dates&p=new_date&l=#lang#">#MSG[Add New Event]#</a>
+            </div>
+        </div>
+
+        <div id="calendar">
+            <!-- Calendar will be generated by JavaScript -->
+        </div>
+
+        <!-- Event Modal -->
+        <div id="eventModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle"></h3>
+                    <button class="close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-detail">
+                    <strong>Date:</strong> <span id="modalDate"></span>
+                </div>
+                <div class="modal-detail">
+                    <strong>Time:</strong> <span id="modalTime"></span>
+                </div>
+                <div class="modal-detail">
+                    <strong>Category:</strong> <span id="modalCategory"></span>
+                </div>
+                <div class="modal-detail">
+                    <strong>Group:</strong> <span id="modalGroup"></span>
+                </div>
+                <div class="modal-detail">
+                    <strong>Status:</strong> <span id="modalStatus"></span>
+                </div>
+                <div class="modal-detail">
+                    <strong>Priority:</strong> <span id="modalPriority"></span>
+                </div>
+                <div class="modal-description">
+                    <strong>Description:</strong>
+                    <p id="modalDescription"></p>
+                </div>
+                <div class="modal-actions">
+                    <div class="rsvp-buttons" id="modalRsvpButtons" style="display: none;">
+                        <button class="rsvp-button accept-button" id="modalAcceptButton">Accept</button>
+                        <button class="rsvp-button decline-button" id="modalDeclineButton">Decline</button>
+                    </div>
+                    <div class="rsvp-status going" id="modalGoingStatus" style="display: none;">
+                        <span class="rsvp-status-icon">✓</span>
+                        Going
+                        <button class="rsvp-undo" onclick="undoRsvpFromModal()">Undo</button>
+                    </div>
+                    <div class="rsvp-status not-going" id="modalNotGoingStatus" style="display: none;">
+                        <span class="rsvp-status-icon">✗</span>
+                        Not Going
+                        <button class="rsvp-undo" onclick="undoRsvpFromModal()">Undo</button>
+                    </div>
+                    <span id="modalCompleteText" class="event-complete" style="display: none;">Complete</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Events Popup -->
+        <div id="dateEventsPopup" class="date-popup">
+            <div class="date-popup-header">
+                <span>Events for <span id="popupDate"></span></span>
+                <button class="date-popup-close" id="closeDatePopup">&times;</button>
+            </div>
+            <div class="date-popup-events" id="datePopupEvents">
+                <!-- Events will be populated here -->
+            </div>
+            <div class="date-popup-add">
+                <a href="#_ORBIT#page?r=dates&p=new_date&l=#lang#">Add New Event</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- All Events Table -->
+    <div class="w3-card w3-margin-top w3-padding">
+        <h4>#MSG[All Events]#</h4>
+        
+        <div class="w3-responsive">
+            <table class="w3-table w3-striped w3-bordered">
+                <tr class="w3-blue">
+                    <th>#MSG[Date]#</th>
+                    <th>#MSG[Title]#</th>
+                    <th>#MSG[Description]#</th>
+                    <th>#MSG[Category]#</th>
+                    <th>#MSG[Time]#</th>
+                    <th>#MSG[Group]#</th>
+                    <th>#MSG[Status]#</th>
+                    <th>#MSG[Priority]#</th>
+                    <th>#MSG[RSVP]#</th>
+                </tr>
+                ]
+                
+[#Complete=DATAFILE[#word#][#1#][Complete]#
+#IF[#complete.NOTEXISTS#]
+[<tr><!--- Repeating Record --->
+<td>#event_date=DATAFILE[#word#][#1#][event_date]##event_date.trim.nowrap#</td>
+<td>#event_title=DATAFILE[#word#][#1#][event_title]##event_title.trim.nowrap#</td>
+<td><pre>#event_description=DATAFILE[#word#][#1#][event_description]#
+<a href="#_ORBIT#page?p=EDIT_#word#&r=#word#&l=#LANG#&word=#1#">#event_description.br.trim#</a>
+</pre></td>
+<td>#event_category=DATAFILE[#word#][#1#][event_category]##event_category.trim.nowrap#</td>
+<td>#start_time=DATAFILE[#word#][#1#][event_start_time]##start_time.trim.nowrap# - #end_time=DATAFILE[#word#][#1#][event_end_time]##end_time.trim.nowrap#</td>
+<td>#group=DATAFILE[#word#][#1#][_group]##group.trim.nowrap#</td>
+<td>#status=DATAFILE[#word#][#1#][_status]##status.trim.nowrap#</td>
+<td>#urgent=DATAFILE[#word#][#1#][_urgent]##DECODE[#urgent.trim#][1][&#128226;]#<br>
+#important=DATAFILE[#word#][#1#][_important]##DECODE[#important.trim#][1][&#9200;]#</td>
+<td style="vertical-align: middle;">
+    <div class="table-rsvp-buttons" style="display: none;">
+        <button class="rsvp-button accept-button table-accept-button" data-event-id="#1#">Accept</button>
+        <button class="rsvp-button decline-button table-decline-button" data-event-id="#1#">Decline</button>
+    </div>
+    <div class="rsvp-status going table-going-status" style="display: none;">
+        <span class="rsvp-status-icon">✓</span>
+        Going
+        <button class="rsvp-undo" data-event-id="#1#">Undo</button>
+    </div>
+    <div class="rsvp-status not-going table-not-going-status" style="display: none;">
+        <span class="rsvp-status-icon">✗</span>
+        Not Going
+        <button class="rsvp-undo" data-event-id="#1#">Undo</button>
+    </div>
+    <span class="event-complete" style="display: none;">Complete</span>
+</td>
+</tr>
+]#<!---#IF[#complete.NOTEXISTS#]--->
+]
+            [</table>
+        </div>
+    </div>
+
+    <script>
+    // Calendar functionality
+    let currentDate = new Date();
+    let isYearView = false;
+    let activeDatePopup = null;
+    let clickedDateElement = null;
+    let popupClickListener = null;
+    let currentModalEventId = null;
+    let toastCounter = 0;
+    let activeToasts = new Set();
+    let buttonCooldown = false;
+
+    // Initialize calendar when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up event listeners
+        document.getElementById('prevBtn').addEventListener('click', function() { navigateView(-1); });
+        document.getElementById('nextBtn').addEventListener('click', function() { navigateView(1); });
+        document.getElementById('todayBtn').addEventListener('click', goToToday);
+        document.getElementById('monthViewBtn').addEventListener('click', function() { setView(false); });
+        document.getElementById('yearViewBtn').addEventListener('click', function() { setView(true); });
+        document.getElementById('closeModal').addEventListener('click', closeModal);
+        document.getElementById('closeDatePopup').addEventListener('click', closeDatePopup);
+        document.getElementById('modalAcceptButton').addEventListener('click', function() { 
+            if (!buttonCooldown) handleRsvp('accepted'); 
+        });
+        document.getElementById('modalDeclineButton').addEventListener('click', function() { 
+            if (!buttonCooldown) handleRsvp('declined'); 
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('eventModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Generate the initial calendar view
+        generateCalendar();
+        
+        // Set up RSVP buttons in the table
+        setupTableRsvpButtons();
+        
+        // Sort the events table by date
+        sortEventsTable();
+    });
+
+    function setButtonCooldown() {
+        buttonCooldown = true;
+        // Disable all RSVP buttons
+        document.querySelectorAll('.rsvp-button, .rsvp-undo').forEach(btn => {
+            btn.disabled = true;
+        });
+        
+        setTimeout(() => {
+            buttonCooldown = false;
+            // Re-enable all RSVP buttons
+            document.querySelectorAll('.rsvp-button, .rsvp-undo').forEach(btn => {
+                btn.disabled = false;
+            });
+        }, 1000); // 1 second cooldown
+    }
+
+    function setView(yearView) {
+        isYearView = yearView;
+        document.getElementById('monthViewBtn').classList.toggle('active', !yearView);
+        document.getElementById('yearViewBtn').classList.toggle('active', yearView);
+        generateCalendar();
+    }
+
+    function navigateView(offset) {
+        if (isYearView) {
+            currentDate.setFullYear(currentDate.getFullYear() + offset);
+        } else {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+        }
+        generateCalendar();
+    }
+
+    function generateCalendar() {
+        if (isYearView) {
+            generateYearView();
+        } else {
+            generateMonthView();
+        }
+    }
+
+    function generateYearView() {
+        const year = currentDate.getFullYear();
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+        const today = new Date();
+        
+        document.getElementById('monthYearHeader').textContent = `${year}`;
+        
+        let calendarHTML = '<div class="year-view">';
+        for (let month = 0; month < 12; month++) {
+            calendarHTML += `
+                <div class="year-month">
+                    <h4 onclick="navigateToMonth(${month})">${monthNames[month]}</h4>
+                    <div id="month-${month}"></div>
+                </div>
+            `;
+        }
+        calendarHTML += '</div>';
+        
+        document.getElementById('calendar').innerHTML = calendarHTML;
+        
+        // Generate mini calendars for each month
+        for (let month = 0; month < 12; month++) {
+            generateMiniMonthView(year, month, `month-${month}`);
+        }
+    }
+
+    function generateMiniMonthView(year, month, containerId) {
+        // Adjust for Monday as first day (0=Sunday, 1=Monday, etc.)
+        let firstDay = new Date(year, month, 1).getDay();
+        // Convert to Monday-first: if Sunday (0), make it 6; otherwise subtract 1
+        firstDay = firstDay === 0 ? 6 : firstDay - 1;
+        
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        
+        // Get all events for this month
+        const eventDates = getEventDatesForMonth(year, month + 1);
+        
+        let calendarHTML = '<table class="year-month-table">';
+        calendarHTML += '<tr>';
+        // Monday-first weekdays
+        ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach(day => {
+            calendarHTML += `<th>${day}</th>`;
+        });
+        calendarHTML += '</tr><tr>';
+        
+        // Add empty cells for days before first day of month
+        for(let i = 0; i < firstDay; i++) {
+            calendarHTML += '<td></td>';
+        }
+        
+        // Add days of month
+        for(let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let cellClass = 'mini-date-cell';
+            
+            // Check if this is today
+            const isToday = today.getFullYear() === year && 
+                            today.getMonth() === month && 
+                            today.getDate() === day;
+            
+            // Check if this date has events
+            const hasEvent = eventDates.includes(dateStr);
+            
+            calendarHTML += `<td class="${cellClass} ${hasEvent ? 'has-event' : ''}" data-date="${dateStr}">
+                <div class="day-number ${isToday ? 'current-day' : ''}">${day}</div>
+            </td>`;
+            
+            // Start new row at end of week (7 days)
+            if((day + firstDay) % 7 === 0 && day !== daysInMonth) {
+                calendarHTML += '</tr><tr>';
+            }
+        }
+        
+        // Add empty cells for remaining days in last week
+        const remainingCells = 7 - ((firstDay + daysInMonth) % 7);
+        if(remainingCells < 7) {
+            for(let i = 0; i < remainingCells; i++) {
+                calendarHTML += '<td></td>';
+            }
+        }
+        
+        calendarHTML += '</tr></table>';
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = calendarHTML;
+            
+            // Add click handlers to mini calendar date cells
+            container.querySelectorAll('.mini-date-cell').forEach(cell => {
+                cell.addEventListener('click', function(e) {
+                    const date = this.getAttribute('data-date');
+                    showDateEventsPopup(date, this);
+                });
+            });
+        }
+    }
+
+    function navigateToMonth(month) {
+        currentDate = new Date(currentDate.getFullYear(), month, 1);
+        setView(false);
+        generateCalendar();
+    }
+
+    function getEventDatesForMonth(year, month) {
+        const eventDates = [];
+        const eventRows = document.querySelectorAll('.w3-table tr:not(.w3-blue)');
+        
+        eventRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                const dateStr = cells[0].textContent.trim();
+                if (dateStr) {
+                    const dateParts = dateStr.split('-');
+                    if (dateParts.length === 3) {
+                        const eventYear = parseInt(dateParts[0]);
+                        const eventMonth = parseInt(dateParts[1]);
+                        if (eventYear === year && eventMonth === month) {
+                            eventDates.push(dateStr);
+                        }
+                    }
+                }
+            }
+        });
+        
+        return eventDates;
+    }
+
+    function generateMonthView() {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        // Update header
+        document.getElementById('monthYearHeader').textContent = `${monthNames[month]} ${year}`;
+        
+        // Get first day of month and adjust for Monday as first day
+        let firstDay = new Date(year, month, 1).getDay();
+        // Convert to Monday-first: if Sunday (0), make it 6; otherwise subtract 1
+        firstDay = firstDay === 0 ? 6 : firstDay - 1;
+        
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Get today's date for highlighting
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+        
+        // Create calendar HTML
+        let calendarHTML = '<table class="w3-table-all w3-card-4 calendar-table">';
+        calendarHTML += '<tr>';
+        // Monday-first weekdays
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+            calendarHTML += `<th class="w3-center">${day}</th>`;
+        });
+        calendarHTML += '</tr><tr>';
+        
+        // Add empty cells for days before first day of month
+        for(let i = 0; i < firstDay; i++) {
+            calendarHTML += '<td class="w3-border other-month"></td>';
+        }
+        
+        // Add days of month
+        for(let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let cellClass = 'w3-border date-cell';
+            
+            if (isCurrentMonth && day === today.getDate()) {
+                cellClass += ' current-day';
+            }
+            
+            calendarHTML += `<td class="${cellClass}" data-date="${dateStr}">
+                <div class="day-number">${day}</div>
+                <div id="events-${dateStr}" class="w3-small"></div>
+            </td>`;
+            
+            // Start new row at end of week (7 days)
+            if((day + firstDay) % 7 === 0 && day !== daysInMonth) {
+                calendarHTML += '</tr><tr>';
+            }
+        }
+        
+        // Add empty cells for remaining days in last week
+        const remainingCells = 7 - ((firstDay + daysInMonth) % 7);
+        if(remainingCells < 7) {
+            for(let i = 0; i < remainingCells; i++) {
+                calendarHTML += '<td class="w3-border other-month"></td>';
+            }
+        }
+        
+        calendarHTML += '</tr></table>';
+        document.getElementById('calendar').innerHTML = calendarHTML;
+        
+        // Add click handlers to date cells
+        document.querySelectorAll('.date-cell').forEach(cell => {
+            cell.addEventListener('click', function(e) {
+                // Don't trigger if clicking on an event inside the cell
+                if (e.target.closest('.event-item')) return;
+                
+                const date = this.getAttribute('data-date');
+                showDateEventsPopup(date, this);
+            });
+        });
+        
+        // Load events for this month
+        loadEventsForMonth(year, month + 1);
+    }
+
+    function loadEventsForMonth(year, month) {
+        const eventRows = document.querySelectorAll('.w3-table tr:not(.w3-blue)');
+        
+        eventRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                const dateStr = cells[0].textContent.trim();
+                if (dateStr) {
+                    const dateParts = dateStr.split('-');
+                    if (dateParts.length === 3) {
+                        const eventYear = parseInt(dateParts[0]);
+                        const eventMonth = parseInt(dateParts[1]);
+                        if (eventYear === year && eventMonth === month) {
+                            const eventDate = dateParts[2];
+                            const eventTitle = cells[1].textContent.trim();
+                            const eventCategory = cells[3].textContent.trim();
+                            const eventId = row.querySelector('a').getAttribute('href').split('word=')[1];
+                            
+                            const eventContainer = document.getElementById(`events-${dateStr}`);
+                            if (eventContainer) {
+                                const eventClass = `event-item event-${eventCategory.toLowerCase().replace(/\s+/g, '-')}`;
+                                
+                                // Check if event is important or urgent
+                                const isImportant = cells[7].textContent.includes('⏰');
+                                const isUrgent = cells[7].textContent.includes('🔢');
+                                
+                                let finalClass = eventClass;
+                                if (isImportant) finalClass += ' event-important';
+                                if (isUrgent) finalClass += ' event-urgent';
+                                
+                                const eventHTML = `<div class="${finalClass}" data-id="${eventId}" title="${eventTitle}">${eventTitle}</div>`;
+                                eventContainer.innerHTML += eventHTML;
+                                
+                                // Add click handler to the event
+                                const eventElement = eventContainer.lastElementChild;
+                                eventElement.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    showEventDetails(this.getAttribute('data-id'));
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function showEventDetails(eventId) {
+        // Find the row with this event
+        const eventRow = document.querySelector(`.w3-table tr:not(.w3-blue) a[href*="word=${eventId}"]`).closest('tr');
+        if (eventRow) {
+            const cells = eventRow.querySelectorAll('td');
+            
+            // Extract event details
+            const date = cells[0].textContent.trim();
+            const title = cells[1].textContent.trim();
+            const description = cells[2].textContent.trim();
+            const category = cells[3].textContent.trim();
+            const time = cells[4].textContent.trim();
+            const group = cells[5].textContent.trim();
+            const status = cells[6].textContent.trim();
+            const priority = cells[7].textContent.trim();
+            
+            // Populate modal
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDate').textContent = date;
+            document.getElementById('modalTime').textContent = time;
+            document.getElementById('modalCategory').textContent = category;
+            document.getElementById('modalGroup').textContent = group;
+            document.getElementById('modalStatus').textContent = status;
+            document.getElementById('modalPriority').textContent = priority;
+            document.getElementById('modalDescription').textContent = description;
+            
+            // Show/hide RSVP elements based on event timing and RSVP status
+            const rsvpButtons = document.getElementById('modalRsvpButtons');
+            const goingStatus = document.getElementById('modalGoingStatus');
+            const notGoingStatus = document.getElementById('modalNotGoingStatus');
+            const completeText = document.getElementById('modalCompleteText');
+            const shouldShowRsvp = shouldShowRsvpForEvent(date, time);
+            
+            // Check RSVP status
+            const rsvpStatus = localStorage.getItem(`rsvp_${eventId}`);
+            currentModalEventId = eventId;
+            
+            if (shouldShowRsvp) {
+                completeText.style.display = 'none';
+                
+                if (rsvpStatus === 'accepted') {
+                    rsvpButtons.style.display = 'none';
+                    goingStatus.style.display = 'flex';
+                    notGoingStatus.style.display = 'none';
+                } else if (rsvpStatus === 'declined') {
+                    rsvpButtons.style.display = 'none';
+                    goingStatus.style.display = 'none';
+                    notGoingStatus.style.display = 'flex';
+                } else {
+                    rsvpButtons.style.display = 'flex';
+                    goingStatus.style.display = 'none';
+                    notGoingStatus.style.display = 'none';
+                }
+            } else {
+                rsvpButtons.style.display = 'none';
+                goingStatus.style.display = 'none';
+                notGoingStatus.style.display = 'none';
+                completeText.style.display = 'inline-block';
+            }
+            
+            // Show modal
+            document.getElementById('eventModal').style.display = 'block';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('eventModal').style.display = 'none';
+        currentModalEventId = null;
+    }
+
+    function showDateEventsPopup(date, element) {
+        // Remove previous clicked date highlight
+        if (clickedDateElement) {
+            clickedDateElement.classList.remove('clicked-date');
+        }
+        
+        // Add highlight to clicked date
+        element.classList.add('clicked-date');
+        clickedDateElement = element;
+        
+        // Format date for display
+        const dateObj = new Date(date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = dateObj.toLocaleDateString('en-US', options);
+        
+        // Update popup header
+        document.getElementById('popupDate').textContent = formattedDate;
+        
+        // Find events for this date
+        const eventsContainer = document.getElementById('datePopupEvents');
+        eventsContainer.innerHTML = '';
+        
+        const eventRows = document.querySelectorAll('.w3-table tr:not(.w3-blue)');
+        let hasEvents = false;
+        
+        eventRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                const eventDate = cells[0].textContent.trim();
+                if (eventDate === date) {
+                    hasEvents = true;
+                    const title = cells[1].textContent.trim();
+                    const category = cells[3].textContent.trim();
+                    const time = cells[4].textContent.trim();
+                    const eventId = row.querySelector('a').getAttribute('href').split('word=')[1];
+                    
+                    const eventClass = `date-popup-event ${category.toLowerCase().replace(/\s+/g, '-')}`;
+                    const eventHTML = `
+                        <div class="${eventClass}" data-id="${eventId}">
+                            <strong>${time}</strong> - ${title}
+                        </div>
+                    `;
+                    eventsContainer.innerHTML += eventHTML;
+                }
+            }
+        });
+        
+        if (!hasEvents) {
+            eventsContainer.innerHTML = '<div class="w3-panel w3-light-grey">No events scheduled for this date.</div>';
+        } else {
+            // Add click handlers to events in the popup
+            eventsContainer.querySelectorAll('.date-popup-event').forEach(eventEl => {
+                eventEl.addEventListener('click', function() {
+                    showEventDetails(this.getAttribute('data-id'));
+                    closeDatePopup();
+                });
+            });
+        }
+        
+        // Position and show the popup
+        const popup = document.getElementById('dateEventsPopup');
+        const rect = element.getBoundingClientRect();
+        
+        // Position below the clicked element
+        popup.style.top = (rect.bottom + window.scrollY) + 'px';
+        popup.style.left = (rect.left + window.scrollX) + 'px';
+        popup.style.display = 'block';
+        activeDatePopup = popup;
+        
+        // Add event listener to close popup when clicking outside
+        if (popupClickListener) {
+            document.removeEventListener('click', popupClickListener);
+        }
+        
+        popupClickListener = function(event) {
+            if (activeDatePopup && !activeDatePopup.contains(event.target) && !element.contains(event.target)) {
+                closeDatePopup();
+            }
+        };
+        
+        document.addEventListener('click', popupClickListener);
+    }
+
+    function closeDatePopup() {
+        if (activeDatePopup) {
+            activeDatePopup.style.display = 'none';
+            activeDatePopup = null;
+        }
+        
+        if (clickedDateElement) {
+            clickedDateElement.classList.remove('clicked-date');
+            clickedDateElement = null;
+        }
+        
+        if (popupClickListener) {
+            document.removeEventListener('click', popupClickListener);
+            popupClickListener = null;
+        }
+    }
+
+    function goToToday() {
+        currentDate = new Date();
+        generateCalendar();
+    }
+
+    function handleRsvp(status) {
+        if (buttonCooldown) return;
+        
+        setButtonCooldown();
+        
+        const eventId = currentModalEventId;
+        const eventRow = document.querySelector(`.w3-table tr:not(.w3-blue) a[href*="word=${eventId}"]`).closest('tr');
+        const cells = eventRow.querySelectorAll('td');
+        const eventTitle = cells[1].textContent.trim();
+        
+        // Store RSVP status in localStorage
+        localStorage.setItem(`rsvp_${eventId}`, status);
+        
+        // Show success toast
+        showRsvpSuccess(eventId, eventTitle, status);
+        
+        // Update the modal to show appropriate status
+        updateRsvpDisplay(eventId, status);
+        
+        // Update the table row to show appropriate status
+        updateTableRsvpDisplay(eventId, status);
+    }
+
+    function undoRsvpFromModal() {
+        if (buttonCooldown) return;
+        
+        setButtonCooldown();
+        
+        const eventId = currentModalEventId;
+        const eventRow = document.querySelector(`.w3-table tr:not(.w3-blue) a[href*="word=${eventId}"]`).closest('tr');
+        const cells = eventRow.querySelectorAll('td');
+        const eventTitle = cells[1].textContent.trim();
+        
+        // Clear RSVP status
+        localStorage.removeItem(`rsvp_${eventId}`);
+        
+        // Show undo toast
+        showRsvpSuccess(eventId, eventTitle, 'cleared');
+        
+        // Update the modal to show buttons again
+        updateRsvpDisplay(eventId, null);
+        
+        // Update the table row to show buttons again
+        updateTableRsvpDisplay(eventId, null);
+    }
+
+    function undoRsvpFromTable(eventId) {
+        if (buttonCooldown) return;
+        
+        setButtonCooldown();
+        
+        const eventRow = document.querySelector(`.w3-table tr:not(.w3-blue) a[href*="word=${eventId}"]`).closest('tr');
+        const cells = eventRow.querySelectorAll('td');
+        const eventTitle = cells[1].textContent.trim();
+        
+        // Clear RSVP status
+        localStorage.removeItem(`rsvp_${eventId}`);
+        
+        // Show undo toast
+        showRsvpSuccess(eventId, eventTitle, 'cleared');
+        
+        // Update the table row to show buttons again
+        updateTableRsvpDisplay(eventId, null);
+        
+        // If modal is open for this event, update it too
+        if (currentModalEventId === eventId) {
+            updateRsvpDisplay(eventId, null);
+        }
+    }
+
+    function updateRsvpDisplay(eventId, status) {
+        const rsvpButtons = document.getElementById('modalRsvpButtons');
+        const goingStatus = document.getElementById('modalGoingStatus');
+        const notGoingStatus = document.getElementById('modalNotGoingStatus');
+        
+        if (status === 'accepted') {
+            rsvpButtons.style.display = 'none';
+            goingStatus.style.display = 'flex';
+            notGoingStatus.style.display = 'none';
+        } else if (status === 'declined') {
+            rsvpButtons.style.display = 'none';
+            goingStatus.style.display = 'none';
+            notGoingStatus.style.display = 'flex';
+        } else {
+            rsvpButtons.style.display = 'flex';
+            goingStatus.style.display = 'none';
+            notGoingStatus.style.display = 'none';
+        }
+    }
+
+    function updateTableRsvpDisplay(eventId, status) {
+        const eventRow = document.querySelector(`.w3-table tr:not(.w3-blue) a[href*="word=${eventId}"]`).closest('tr');
+        if (!eventRow) return;
+        
+        const buttons = eventRow.querySelector('.table-rsvp-buttons');
+        const goingStatus = eventRow.querySelector('.table-going-status');
+        const notGoingStatus = eventRow.querySelector('.table-not-going-status');
+        
+        if (status === 'accepted') {
+            buttons.style.display = 'none';
+            goingStatus.style.display = 'flex';
+            notGoingStatus.style.display = 'none';
+        } else if (status === 'declined') {
+            buttons.style.display = 'none';
+            goingStatus.style.display = 'none';
+            notGoingStatus.style.display = 'flex';
+        } else {
+            buttons.style.display = 'flex';
+            goingStatus.style.display = 'none';
+            notGoingStatus.style.display = 'none';
+        }
+    }
+
+    function showRsvpSuccess(eventId, eventTitle, status) {
+        const toastId = 'toast-' + toastCounter++;
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Cap visible toasts at 4 - remove oldest if needed
+        const currentToasts = toastContainer.querySelectorAll('.rsvp-toast');
+        if (currentToasts.length >= 4) {
+            // Remove the oldest toast (first child)
+            const oldestToast = currentToasts[0];
+            removeToast(oldestToast.id);
+        }
+        
+        let message, icon, toastClass;
+        
+        if (status === 'accepted') {
+            message = `Going to: ${eventTitle}`;
+            icon = '✓';
+            toastClass = 'accepted';
+        } else if (status === 'declined') {
+            message = `Not going to: ${eventTitle}`;
+            icon = '✗';
+            toastClass = 'declined';
+        } else {
+            message = `RSVP cleared for: ${eventTitle}`;
+            icon = '↶';
+            toastClass = 'cleared';
+        }
+        
+        const toastHTML = `
+            <div class="rsvp-toast ${toastClass}" id="${toastId}">
+                <span class="rsvp-toast-icon">${icon}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="removeToast('${toastId}')">×</button>
+            </div>
+        `;
+        
+        // Add new toast to the END of the container (will appear at bottom)
+        toastContainer.appendChild(createElementFromHTML(toastHTML));
+        activeToasts.add(toastId);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            removeToast(toastId);
+        }, 3000);
+    }
+
+    function createElementFromHTML(htmlString) {
+        const div = document.createElement('div');
+        div.innerHTML = htmlString.trim();
+        return div.firstChild;
+    }
+
+    function removeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast && !toast.classList.contains('sliding-out')) {
+            toast.classList.add('sliding-out');
+            activeToasts.delete(toastId);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }
+    }
+
+    function setupTableRsvpButtons() {
+        const rows = document.querySelectorAll('.w3-table tr:not(.w3-blue)');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 9) {
+                const date = cells[0].textContent.trim();
+                const timeRange = cells[4].textContent.trim();
+                const eventId = row.querySelector('a').getAttribute('href').split('word=')[1];
+                const rsvpCell = cells[8];
+                const buttons = rsvpCell.querySelector('.table-rsvp-buttons');
+                const goingStatus = rsvpCell.querySelector('.table-going-status');
+                const notGoingStatus = rsvpCell.querySelector('.table-not-going-status');
+                const completeText = rsvpCell.querySelector('.event-complete');
+                
+                const shouldShowRsvp = shouldShowRsvpForEvent(date, timeRange);
+                const rsvpStatus = localStorage.getItem(`rsvp_${eventId}`);
+                
+                // Set up undo button
+                const undoButtons = rsvpCell.querySelectorAll('.rsvp-undo');
+                undoButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        if (!buttonCooldown) undoRsvpFromTable(eventId);
+                    });
+                });
+                
+                if (shouldShowRsvp) {
+                    completeText.style.display = 'none';
+                    
+                    if (rsvpStatus === 'accepted') {
+                        buttons.style.display = 'none';
+                        goingStatus.style.display = 'flex';
+                        notGoingStatus.style.display = 'none';
+                    } else if (rsvpStatus === 'declined') {
+                        buttons.style.display = 'none';
+                        goingStatus.style.display = 'none';
+                        notGoingStatus.style.display = 'flex';
+                    } else {
+                        buttons.style.display = 'flex';
+                        goingStatus.style.display = 'none';
+                        notGoingStatus.style.display = 'none';
+                    }
+                    
+                    // Set up accept/decline buttons
+                    const acceptButton = rsvpCell.querySelector('.table-accept-button');
+                    const declineButton = rsvpCell.querySelector('.table-decline-button');
+                    
+                    if (acceptButton) {
+                        acceptButton.addEventListener('click', function() {
+                            if (!buttonCooldown) {
+                                const eventRow = this.closest('tr');
+                                const cells = eventRow.querySelectorAll('td');
+                                const eventTitle = cells[1].textContent.trim();
+                                
+                                localStorage.setItem(`rsvp_${eventId}`, 'accepted');
+                                showRsvpSuccess(eventId, eventTitle, 'accepted');
+                                updateTableRsvpDisplay(eventId, 'accepted');
+                            }
+                        });
+                    }
+                    
+                    if (declineButton) {
+                        declineButton.addEventListener('click', function() {
+                            if (!buttonCooldown) {
+                                const eventRow = this.closest('tr');
+                                const cells = eventRow.querySelectorAll('td');
+                                const eventTitle = cells[1].textContent.trim();
+                                
+                                localStorage.setItem(`rsvp_${eventId}`, 'declined');
+                                showRsvpSuccess(eventId, eventTitle, 'declined');
+                                updateTableRsvpDisplay(eventId, 'declined');
+                            }
+                        });
+                    }
+                } else {
+                    buttons.style.display = 'none';
+                    goingStatus.style.display = 'none';
+                    notGoingStatus.style.display = 'none';
+                    completeText.style.display = 'inline-block';
+                }
+            }
+        });
+    }
+
+    function shouldShowRsvpForEvent(dateStr, timeRange) {
+        const now = new Date();
+        const currentDateTime = now.getTime();
+        
+        // Parse the event date and time range
+        const [startTimeStr, endTimeStr] = timeRange.split(' - ');
+        
+        // Create datetime objects for event start and end
+        const eventStart = new Date(dateStr + 'T' + startTimeStr + ':00');
+        let eventEnd;
+        
+        if (endTimeStr) {
+            eventEnd = new Date(dateStr + 'T' + endTimeStr + ':00');
+        } else {
+            // If no end time, assume event ends at start time + 1 hour
+            eventEnd = new Date(eventStart.getTime() + 60 * 60 * 1000);
+        }
+        
+        // Show RSVP if current time is before event end time
+        // This includes events that are currently happening and future events
+        return currentDateTime < eventEnd.getTime();
+    }
+    
+    function sortEventsTable() {
+        const table = document.querySelector('.w3-table');
+        const rows = Array.from(table.querySelectorAll('tr:not(.w3-blue)'));
+        const headerRow = table.querySelector('tr.w3-blue');
+        
+        // Remove existing rows (except header)
+        rows.forEach(row => row.remove());
+        
+        // Sort rows by date (first column)
+        rows.sort((a, b) => {
+            const dateA = new Date(a.cells[0].textContent.trim());
+            const dateB = new Date(b.cells[0].textContent.trim());
+            return dateA - dateB;
+        });
+        
+        // Re-append sorted rows
+        table.appendChild(headerRow);
+        rows.forEach(row => table.appendChild(row));
+    }
+    </script>
+</body>
+]#
