@@ -1,0 +1,739 @@
+#INC[EL_TOKENS]#
+#INC![EL_HEADER]#
+#root=[dates]#
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!--- Global styles --->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .calendar-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .calendar-title {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0 10px;
+        }
+        .calendar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dates-button {
+            margin: 0;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .event-table {
+            margin-top: 20px;
+        }
+
+        #calendar {
+            margin-top: 20px;
+        }
+
+        /* View toggle styles */
+        .view-toggle-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .view-toggle-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: normal;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+
+        /* Modal styles */
+        #eventModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 25px;
+            border: none;
+            width: 50%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-detail {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .modal-detail strong {
+            display: inline-block;
+            width: 100px;
+            color: #666;
+        }
+
+        .modal-description {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        /* Calendar table styles */
+        .calendar-table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+        .calendar-table th {
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .calendar-table td {
+            height: 100px;
+            vertical-align: top;
+            position: relative;
+            padding: 4px;
+            width: 14.28%;
+            background-color: #fff;
+            border-radius: 4px;
+        }
+
+        .calendar-table .day-number {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-left: auto;
+            border-radius: 50%;        }
+
+        .calendar-table .current-day .day-number {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .calendar-table .other-month {
+            color: #ccc;
+            background-color: #f9f9f9;
+        }
+
+        .calendar-table .has-events {
+            background-color: #f8f9fa;
+        }
+
+        .calendar-table .event-item {
+            font-size: 10px;
+            padding: 3px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            clear: both;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .calendar-table .event-item:hover {
+            opacity: 0.9;
+        }
+
+        /* ROYGBIV color palette for days of week */
+        .calendar-table th:nth-child(1) { background-color: #ff6b6b; color: white; } /* Sunday - Red */
+        .calendar-table th:nth-child(2) { background-color: #ffa502; color: white; } /* Monday - Orange */
+        .calendar-table th:nth-child(3) { background-color: #f9ca24; color: #333; } /* Tuesday - Yellow */
+        .calendar-table th:nth-child(4) { background-color: #2ecc71; color: white; } /* Wednesday - Green */
+        .calendar-table th:nth-child(5) { background-color: #1e90ff; color: white; } /* Thursday - Blue */
+        .calendar-table th:nth-child(6) { background-color: #5f27cd; color: white; } /* Friday - Indigo */
+        .calendar-table th:nth-child(7) { background-color: #8e44ad; color: white; } /* Saturday - Violet */
+
+        /* Event category colors */
+        .calendar-table .event-personal { background-color: #3498db; }
+        .calendar-table .event-work { background-color: #2ecc71; }
+        .calendar-table .event-meeting { background-color: #f39c12; }
+        .calendar-table .event-appointment { background-color: #e74c3c; }
+        .calendar-table .event-reminder { background-color: #9b59b6; }
+
+        .calendar-table .event-important { background-color: #e74c3c !important; }
+        .calendar-table .event-urgent { background-color: #f39c12 !important; }
+
+        /* Year view styles */
+        .year-view {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .year-month {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .year-month h4 {
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .year-month h4:hover {
+            color: #667eea;
+        }
+
+        .year-month-table {
+            width: 100%;
+            font-size: 10px;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .year-month-table th {
+            padding: 3px;
+            text-align: center;
+            background: #f5f7fa;
+            font-weight: normal;
+        }
+
+        .year-month-table td {
+            padding: 3px;
+            text-align: center;
+            height: 20px;
+            position: relative;
+            border: 1px solid #eee;
+        }
+
+       .year-month-table .day-number {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+        .year-month-table .current-day .day-number {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .year-month-table .has-event {
+            position: relative;
+        }
+
+        .year-month-table .has-event:after {
+            content: '';
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #3498db;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <div class="calendar-controls">
+            <button class="dates-button w3-button w3-blue" onclick="navigateView(-1)">❮</button>
+            <button class="dates-button w3-button w3-green" onclick="goToToday()">Today</button>
+            <button class="dates-button w3-button w3-blue" onclick="navigateView(1)">❯</button>
+        </div>
+        <div class="calendar-title">
+            <h2 id="monthYearHeader">Calendar</h2>
+        </div>
+        <div class="calendar-actions">
+            <div class="view-toggle-buttons">
+                <button id="monthViewBtn" class="view-toggle-btn active" onclick="setView(false)">Month</button>
+                <button id="yearViewBtn" class="view-toggle-btn" onclick="setView(true)">Year</button>
+            </div>
+            <a class="dates-button w3-button w3-red w3-round-xlarge" href="#_ORBIT#page?r=dates&p=new_date&l=#lang#">#MSG[Add New Event]#</a>
+        </div>
+    </div>
+
+    <div id="calendar">
+        <!-- Calendar will be generated by JavaScript -->
+    </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle"></h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-detail">
+                <strong>Date:</strong> <span id="modalDate"></span>
+            </div>
+            <div class="modal-detail">
+                <strong>Time:</strong> <span id="modalTime"></span>
+            </div>
+            <div class="modal-detail">
+                <strong>Category:</strong> <span id="modalCategory"></span>
+            </div>
+            <div class="modal-detail">
+                <strong>Group:</strong> <span id="modalGroup"></span>
+            </div>
+            <div class="modal-detail">
+                <strong>Status:</strong> <span id="modalStatus"></span>
+            </div>
+<div class="modal-detail">
+    <strong>Priority:</strong> <span id="modalPriority"></span>
+</div>
+            <div class="modal-description">
+                <strong>Description:</strong>
+                <p id="modalDescription"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Events Table -->
+<div class="w3-card w3-margin-top w3-padding">
+    <h4>#MSG[All Events]#</h4>
+
+    <table border="1" class="w3-table w3-striped w3-bordered w3-border">
+    <tr class="w3-blue">
+    <th>#MSG[Date]#</th>
+    <th>#MSG[Title]#</th>
+    <th>#MSG[Description]#</th>
+    <th>#MSG[Category]#</th>
+    <th>#MSG[Time]#</th>
+    <th>#MSG[Group]#</th>
+    <th>#MSG[Status]#</th>
+    <th>#MSG[Important]#<br>#MSG[Urgent]#</th>
+    </tr>
+
+#Complete=DATAFILE[#root#][#1#][Complete]#
+#IF[#complete.NOTEXISTS#]
+<tr class=""><!--- Repeating Record --->
+<td>#event_date=DATAFILE[#root#][#1#][event_date]##event_date.trim.nowrap#</td>
+<td>#event_title=DATAFILE[#root#][#1#][event_title]##event_title.trim.nowrap#</td>
+<td><pre>#event_description=DATAFILE[#root#][#1#][event_description]#
+<a href="#_ORBIT#page?p=EDIT_#root#&r=#root#&l=#LANG#&word=#1#">#event_description.br.trim#</a>
+</pre></td>
+<td>#event_category=DATAFILE[#root#][#1#][event_category]##event_category.trim.nowrap#</td>
+<td>#start_time=DATAFILE[#root#][#1#][event_start_time]##start_time.trim.nowrap# - #end_time=DATAFILE[#root#][#1#][event_end_time]##end_time.trim.nowrap#</td>
+<td>#group=DATAFILE[#root#][#1#][_group]##group.trim.nowrap#</td>
+<td>#status=DATAFILE[#root#][#1#][_status]##status.trim.nowrap#</td>
+<td>#urgent=DATAFILE[#root#][#1#][_urgent]##DECODE[#urgent.trim#][1][&#128226;]#<br>
+#important=DATAFILE[#root#][#1#][_important]##DECODE[#important.trim#][1][&#9200;]#</td>
+</tr>
+]#<!---#IF[#complete.NOTEXISTS#]--->
+
+    </table>
+</div>
+
+<script>
+// Current date tracking
+let currentDate = new Date();
+let isYearView = false;
+
+// Set calendar view
+function setView(yearView) {
+    isYearView = yearView;
+    document.getElementById('monthViewBtn').classList.toggle('active', !yearView);
+    document.getElementById('yearViewBtn').classList.toggle('active', yearView);
+    generateCalendar();
+}
+
+// Navigate between months/years based on current view
+function navigateView(offset) {
+    if (isYearView) {
+        currentDate.setFullYear(currentDate.getFullYear() + offset);
+    } else {
+        currentDate.setMonth(currentDate.getMonth() + offset);
+    }
+    generateCalendar();
+}
+// Generate calendar based on current view
+function generateCalendar() {
+    if (isYearView) {
+        generateYearView();
+    } else {
+        generateMonthView();
+    }
+}
+
+// Generate year view calendar
+function generateYearView() {
+    const year = currentDate.getFullYear();
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+    const today = new Date();
+
+    document.getElementById('monthYearHeader').textContent = `${year}`;
+
+    let calendarHTML = '<div class="year-view">';
+    for (let month = 0; month < 12; month++) {
+        calendarHTML += `
+            <div class="year-month">
+                <h4 onclick="navigateToMonth(${month})">${monthNames[month]}</h4>
+                <div id="month-${month}"></div>
+            </div>
+        `;
+    }
+    calendarHTML += '</div>';
+
+    document.getElementById('calendar').innerHTML = calendarHTML;
+
+    // Generate mini calendars for each month
+    for (let month = 0; month < 12; month++) {
+        generateMiniMonthView(year, month, `month-${month}`);
+    }
+}
+
+// Navigate to specific month from year view
+function navigateToMonth(month) {
+    currentDate = new Date(currentDate.getFullYear(), month, 1);
+    setView(false);
+    generateCalendar();
+}
+
+// Generate mini month view for year view
+function generateMiniMonthView(year, month, containerId) {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    // Get all events for this month
+    const eventDates = getEventDatesForMonth(year, month + 1);
+
+    let calendarHTML = '<table class="year-month-table">';
+    calendarHTML += '<tr>';
+    ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+        calendarHTML += `<th>${day}</th>`;
+    });
+    calendarHTML += '</tr><tr>';
+
+    // Add empty cells for days before first day of month
+    for(let i = 0; i < firstDay; i++) {
+        calendarHTML += '<td></td>';
+    }
+
+    // Add days of month
+    for(let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let cellClass = '';
+
+        // Check if this is today
+        const isToday = today.getFullYear() === year &&
+                        today.getMonth() === month &&
+                        today.getDate() === day;
+
+        // Check if this date has events
+        const hasEvent = eventDates.includes(dateStr);
+
+        calendarHTML += `<td class="${hasEvent ? 'has-event' : ''}">
+            <div class="day-number ${isToday ? 'current-day' : ''}">${day}</div>
+        </td>`;
+
+        // Start new row at end of week
+        if((day + firstDay) % 7 === 0 && day !== daysInMonth) {
+            calendarHTML += '</tr><tr>';
+        }
+    }
+
+    // Add empty cells for remaining days in last week
+    const remainingCells = 7 - ((firstDay + daysInMonth) % 7);
+    if(remainingCells < 7) {
+        for(let i = 0; i < remainingCells; i++) {
+            calendarHTML += '<td></td>';
+        }
+    }
+
+    calendarHTML += '</tr></table>';
+    document.getElementById(containerId).innerHTML = calendarHTML;
+}
+// Get all event dates for a specific month
+function getEventDatesForMonth(year, month) {
+    const eventDates = [];
+    const eventRows = document.querySelectorAll('table tr:not(.w3-blue)');
+
+    eventRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 8) {
+            const dateStr = cells[0].textContent.trim();
+            if (dateStr) {
+                const [eventYear, eventMonth, eventDay] = dateStr.split('-').map(Number);
+                if (eventYear === year && eventMonth === month) {
+                    eventDates.push(dateStr);
+                }
+            }
+        }
+    });
+
+    return eventDates;
+}
+
+// Generate month view calendar
+function generateMonthView() {
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    // Update header
+    document.getElementById('monthYearHeader').textContent = `${monthNames[month]} ${year}`;
+
+    // Get first day of month and total days in month
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Get today's date for highlighting
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+    // Create calendar HTML
+    let calendarHTML = '<table class="w3-table-all w3-card-4 calendar-table">';
+    calendarHTML += '<tr>';
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+        calendarHTML += `<th class="w3-center">${day}</th>`;
+    });
+    calendarHTML += '</tr><tr>';
+
+    // Add empty cells for days before first day of month
+    for(let i = 0; i < firstDay; i++) {
+        calendarHTML += '<td class="w3-border other-month"></td>';
+    }
+
+    // Add days of month
+    for(let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let cellClass = 'w3-border';
+
+        if (isCurrentMonth && day === today.getDate()) {
+            cellClass += ' current-day';
+        }
+
+        calendarHTML += `<td class="${cellClass}">
+            <div class="day-number">${day}</div>
+            <div id="events-${dateStr}" class="w3-small"></div>
+        </td>`;
+
+        // Start new row at end of week
+        if((day + firstDay) % 7 === 0 && day !== daysInMonth) {
+            calendarHTML += '</tr><tr>';
+        }
+    }
+
+    // Add empty cells for remaining days in last week
+    const remainingCells = 7 - ((firstDay + daysInMonth) % 7);
+    if(remainingCells < 7) {
+        for(let i = 0; i < remainingCells; i++) {
+            calendarHTML += '<td class="w3-border other-month"></td>';
+        }
+    }
+
+    calendarHTML += '</tr></table>';
+    document.getElementById('calendar').innerHTML = calendarHTML;
+
+    // Load events for this month
+    loadEventsForMonth();
+}
+
+function loadEventsForMonth() {
+    const eventRows = document.querySelectorAll('table tr:not(.w3-blue)');
+
+    eventRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 8) {
+            const dateStr = cells[0].textContent.trim();
+            const title = cells[1].textContent.trim();
+            const description = cells[2].textContent.trim();
+            const category = cells[3].textContent.trim();
+            const timeStr = cells[4].textContent.trim();
+            const group = cells[5].textContent.trim();
+            const status = cells[6].textContent.trim();
+            const priority = cells[7].textContent.trim();
+
+            if (dateStr && title) {
+                const eventElement = document.getElementById(`events-${dateStr}`);
+                if (eventElement) {
+                    let eventClass = 'event-item';
+
+                    // Apply priority styling
+                    if (priority === 'urgent') {
+                        eventClass += ' event-urgent';
+                    } else if (priority === 'important' || priority === 'critical') {
+                        eventClass += ' event-important';
+                    } else if (category) {
+                        eventClass += ` event-${category.toLowerCase()}`;
+                    }
+
+                    // Add group and status as data attributes
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = eventClass;
+                    eventDiv.dataset.group = group;
+                    eventDiv.dataset.status = status;
+                    eventDiv.dataset.priority = priority;
+
+                    const displayTime = timeStr.includes('-') ? timeStr.split('-')[0].trim() + ' ' : '';
+                    eventDiv.title = `${title}\nGroup: ${group}\nStatus: ${status}\nPriority: ${priority}`;
+                    eventDiv.textContent = `${displayTime}${title}`;
+
+                    eventDiv.onclick = () => openModal({
+                        title,
+                        date: dateStr,
+                        time: timeStr,
+                        category,
+                        group,
+                        status,
+                        priority,
+                        description
+                    });
+
+                    eventElement.appendChild(eventDiv);
+                    eventElement.parentElement.classList.add('has-events');
+                }
+            }
+        }
+    });
+}
+
+// Modal functions
+function openModal(eventData) {
+    document.getElementById('modalTitle').textContent = eventData.title;
+    document.getElementById('modalDate').textContent = eventData.date;
+    document.getElementById('modalTime').textContent = eventData.time;
+    document.getElementById('modalCategory').textContent = eventData.category;
+    document.getElementById('modalGroup').textContent = eventData.group;
+    document.getElementById('modalStatus').textContent = eventData.status;
+    document.getElementById('modalPriority').textContent = eventData.priority;
+    document.getElementById('modalDescription').textContent = eventData.description;
+    document.getElementById('eventModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('eventModal').style.display = 'none';
+}
+
+function goToToday() {
+    currentDate = new Date();
+    setView(false); // Always switch to month view when clicking Today
+    generateCalendar();
+}
+
+// Initialize calendar on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure table is rendered first
+    setTimeout(generateCalendar, 100);
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('eventModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+});
+</script>
+
+
+#INC![EL_FOOTER]#
+
+
+
+
+
+
+
