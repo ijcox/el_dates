@@ -1,0 +1,193 @@
+<!--- Start of file -->
+#root=[dates]#
+#INC[EL_TOKENS]#
+#INC![EL_HEADER]#
+
+<div class="w3-container w3-margin-top">
+              <h2>Add New Event</h2>
+
+    <form action="https://games.earth/o/elnew" method="post" class="w3-card w3-padding">
+
+        <input type="hidden" name="root" value="#root#">
+        <input type="hidden" name="o" value="dates">
+        <input type="hidden" name="lang" value="ENG">
+        <input type="hidden" name="page" value="calendar">
+        #transID=TRANSACTIONID[]#
+        <input type="hidden" name="_name_req" value="#transID#">
+        <input type="hidden" name="tid" value="#transID#">
+
+        <!-- Updated formfields to include all fields and required transaction ID -->
+        <input type="hidden" name="formfields" value="_name_req,event_date,event_title,event_description,event_category,event_start_time,event_end_time,event_all_day,event_repeat_type,event_custom_repeat_days,event_repeat_end_date,event_repeat_occurrences,_group,_status,_important">
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12 m6">
+                <label>Event Title *</label>
+                <input class="w3-input w3-border" type="text" name="event_title" required>
+            </div>
+            <div class="w3-col s12 m6">
+                <label>Date *</label>
+                <input class="w3-input w3-border" type="date" name="event_date" value="#GET[date]#" required>
+            </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12">
+                <label>Description</label>
+                <textarea class="w3-input w3-border" name="event_description" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12 m4">
+                <label>Category</label>
+                <select class="w3-select w3-border" name="event_category">
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="appointment">Appointment</option>
+                    <option value="reminder">Reminder</option>
+                </select>
+            </div>
+            <div class="w3-col s12 m4">
+                <label>Start Time</label>
+                <input class="w3-input w3-border" type="time" name="event_start_time">
+            </div>
+            <div class="w3-col s12 m4">
+                <label>End Time</label>
+                <input class="w3-input w3-border" type="time" name="event_end_time">
+            </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12">
+                <label>
+                    <input class="w3-check" type="checkbox" name="event_all_day" value="1">
+                    All Day Event
+                </label>
+            </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12">
+                <label>Repeat</label>
+                <select class="w3-select w3-border" name="event_repeat_type" id="repeatType">
+                    <option value="none">No Repeat</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="customRepeatGroup" class="w3-panel w3-light-grey w3-padding" style="display:none;">
+            <div class="w3-row-padding w3-margin-bottom">
+                <div class="w3-col s12">
+                    <label>Repeat Every</label>
+                    <input class="w3-input w3-border" type="number" name="event_custom_repeat_days" min="1" value="1" style="width:100px; display: inline-block;"> days
+                </div>
+            </div>
+
+            <div class="w3-row-padding w3-margin-bottom">
+                <div class="w3-col s12">
+                    <label>End Repeat</label>
+                    <select class="w3-select w3-border" name="event_repeat_end_type" id="repeatEndType">
+                        <option value="never">Never</option>
+                        <option value="on">On Date</option>
+                        <option value="after">After Occurrences</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="repeatEndDateGroup" style="display:none;">
+                <div class="w3-row-padding w3-margin-bottom">
+                    <div class="w3-col s12">
+                        <label>End Date</label>
+                        <input class="w3-input w3-border" type="date" name="event_repeat_end_date">
+                    </div>
+                </div>
+            </div>
+
+            <div id="repeatOccurrencesGroup" style="display:none;">
+                <div class="w3-row-padding w3-margin-bottom">
+                    <div class="w3-col s12">
+                        <label>Number of Occurrences</label>
+                        <input class="w3-input w3-border" type="number" name="event_repeat_occurrences" min="1" value="5" style="width:100px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12 m6">
+                <label>Group</label>
+                <select class="w3-select w3-border" name="_group">
+                    <option value=""></option>
+                    <option selected value="NA">should show associated groups</option>
+                </select>
+            </div>
+            <div class="w3-col s12 m6">
+                <label>Status</label>
+                <select class="w3-select w3-border" name="_status">
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Tentative">Tentative</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="w3-row-padding w3-margin-bottom">
+            <div class="w3-col s12">
+                <label>
+                    <input class="w3-check" type="checkbox" name="_priority" value="1">
+                    Priority
+                </label>
+            </div>
+        </div>
+        <div class="w3-row-padding w3-margin-top">
+            <div class="w3-col s12">
+                <button type="submit" class="w3-button w3-blue w3-round">Save Event</button>
+                <a href="#_ORBIT#page?r=dates&p=calendar&l=#lang#" class="w3-button w3-gray w3-round">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('repeatType').addEventListener('change', function() {
+    const customGroup = document.getElementById('customRepeatGroup');
+    customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+document.getElementById('repeatEndType').addEventListener('change', function() {
+    document.getElementById('repeatEndDateGroup').style.display = this.value === 'on' ? 'block' : 'none';
+    document.getElementById('repeatOccurrencesGroup').style.display = this.value === 'after' ? 'block' : 'none';
+
+    // Set default end date to 1 month from now if "On Date" is selected
+    if (this.value === 'on') {
+        const dateInput = document.querySelector('input[name="event_date"]');
+        if (dateInput.value) {
+            const endDate = new Date(dateInput.value);
+            endDate.setMonth(endDate.getMonth() + 1);
+            document.querySelector('input[name="event_repeat_end_date"]').value = endDate.toISOString().split('T')[0];
+        }
+    }
+});
+
+// Toggle time inputs when all day is checked
+document.querySelector('input[name="event_all_day"]').addEventListener('change', function() {
+    const timeInputs = document.querySelectorAll('input[type="time"]');
+    timeInputs.forEach(input => {
+        input.disabled = this.checked;
+        if (this.checked) {
+            input.value = '';
+        }
+    });
+});
+</script>
+
+#INC![EL_FOOTER]#
+<!--- End of file -->
+
+
